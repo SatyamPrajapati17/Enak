@@ -13,7 +13,13 @@ class EnakApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
+        try {
+            com.enak.tracking.EnakForegroundService.startService(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
+
 
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

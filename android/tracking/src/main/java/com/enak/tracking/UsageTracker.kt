@@ -16,7 +16,7 @@ class UsageTracker(private val context: Context) {
         context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
 
     /**
-     * Compute foreground time for all apps since start of today using UsageEvents.
+     * Compute real foreground time for all apps since start of today (00:00).
      */
     fun queryTodayUsage(): Map<String, Long> {
         val manager = usageStatsManager ?: return emptyMap()
@@ -30,59 +30,56 @@ class UsageTracker(private val context: Context) {
         val startOfDay = cal.timeInMillis
         val now = System.currentTimeMillis()
 
-        val events = manager.queryEvents(startOfDay, now)
-        val event = UsageEvents.Event()
+        // queryAndAggregateUsageStats provides exact accumulated foreground milliseconds
+        val aggregated = manager.queryAndAggregateUsageStats(startOfDay, now)
+        val result = mutableMapOf<String, Long>()
 
-        val lastResumeTimes = mutableMapOf<String, Long>()
-        val totalForegroundTimes = mutableMapOf<String, Long>()
-
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val pkg = event.packageName ?: continue
-            when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> {
-                    lastResumeTimes[pkg] = event.timeStamp
-                }
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    val resumedAt = lastResumeTimes.remove(pkg)
-                    if (resumedAt != null && event.timeStamp > resumedAt) {
-                        val duration = event.timeStamp - resumedAt
-                        totalForegroundTimes[pkg] = (totalForegroundTimes[pkg] ?: 0L) + duration
-                    }
-                }
+        for ((pkg, stats) in aggregated) {
+            val foreground = stats.totalTimeInForeground
+            if (foreground > 0L) {
+                result[pkg] = foreground
             }
         }
-
-        // Account for any app currently in foreground
-        for ((pkg, resumedAt) in lastResumeTimes) {
-            if (now > resumedAt) {
-                val duration = now - resumedAt
-                totalForegroundTimes[pkg] = (totalForegroundTimes[pkg] ?: 0L) + duration
-            }
-        }
-
-        return totalForegroundTimes
+        return result
     }
 
     /**
-     * Detect the currently active foreground package name from recent events.
+     * Detect the currently active foreground package name reliably across Android 8 to 15.
      */
     fun getCurrentForegroundPackage(): String? {
         val manager = usageStatsManager ?: return null
         val now = System.currentTimeMillis()
-        val events = manager.queryEvents(now - 10_000L, now)
+
+        // 1. First check usage events over the last 30 seconds
+        val events = manager.queryEvents(now - 30_000L, now)
         val event = UsageEvents.Event()
         var currentPkg: String? = null
         var lastTimestamp = 0L
 
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED && event.timeStamp > lastTimestamp) {
+            if ((event.eventType == UsageEvents.Event.ACTIVITY_RESUMED ||
+                 event.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) &&
+                event.timeStamp > lastTimestamp
+            ) {
                 currentPkg = event.packageName
                 lastTimestamp = event.timeStamp
             }
         }
-        return currentPkg
+
+        if (!currentPkg.isNullOrEmpty()) {
+            return currentPkg
+        }
+
+        // 2. Fallback: inspect recent usage stats sorted by lastTimeUsed
+        val recentStats = manager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            now - 60_000L,
+            now
+        )
+        return recentStats
+            ?.filter { it.lastTimeUsed > 0L && it.packageName != context.packageName }
+            ?.maxByOrNull { it.lastTimeUsed }
+            ?.packageName
     }
 }

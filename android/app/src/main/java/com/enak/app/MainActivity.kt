@@ -148,6 +148,7 @@ fun EnakAppRoot(
             composable(Screen.Session.route) {
                 SessionScreen(
                     viewModel = viewModel,
+                    onNavigateToIntent = { navController.navigate(Screen.Intent.route) },
                     onFinish = { navController.navigate(Screen.Recap.route) }
                 )
             }

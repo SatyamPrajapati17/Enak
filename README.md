@@ -108,21 +108,37 @@ enak/
 ## Native Android Capabilities
 
 ### 1. Distraction Blocker & Focus Shield
-When **Focus Shield Mode** is toggled on, or when an app exceeds its daily boundary:
-- Enak immediately intercepts the target package name via `EnakAccessibilityService` and `EnakForegroundService`.
-- Displays the mindful `BlockerActivity` overlay offering:
-  - **"Close app"**: Sends the user directly to the Android Home screen.
-  - **"Take a Breather"**: Initiates a 4-second box breathing exercise (Inhale 4s $\rightarrow$ Hold 4s $\rightarrow$ Exhale 4s) with an animated glowing circle.
-  - **"Ask for 5 More Minutes"**: Evaluates user intention through the AI Coach ladder.
-- Apps remain blocked until you turn off Focus Mode in Enak.
+When **Distraction Blocker** is active (or when an app exceeds its daily boundary):
+- Enak intercepts the target package name via `EnakAccessibilityService` and `EnakForegroundService`.
+- Displays the live `BlockerActivity` overlay with the 3 direct actions:
+  - 🏠 **"Exit [App] (Go Home)"**: Closes the distracting app immediately and returns to Android home.
+  - ⏱️ **"Put Timer for a While (+5m)"**: Temporarily snoozes the blocker for 5 intentional minutes before re-engaging.
+  - ⚡ **"Back to Enak"**: Navigates straight back to the Enak dashboard to start a focused session.
+  - 🧘 **"Take a 60s Breather"**: Smooth circular box breathing exercise to reset dopamine cravings.
+- Distracting apps remain shielded continuously until toggled off from Enak's Digital Wellbeing tab.
 
 ### 2. Real Usage Access Tracking
-Uses `UsageStatsManager.queryEvents()` to measure exact foreground minutes per application today without ever inspecting screen contents or reading personal data.
+Uses Android's `UsageStatsManager.queryAndAggregateUsageStats()` to calculate actual foreground minutes spent per application today. Enak displays real screen time instead of mock values and never inspects personal user content.
 
-### 3. Strict Mode (Device Administrator)
+### 3. Curated Mindful Learning Intentions
+Directly embedded high-impact learning intentions with one-tap YouTube playback and automatic session goal configuration:
+- **Learn AI in 15 Minutes**: Core fundamentals of deep learning & LLMs
+- **English Learning Session**: Spoken fluency, pronunciation, and expression
+- **How to Start Fitness**: Beginner home workouts & posture habits
+- **Web Developer Roadmap**: Full-stack web technologies & system design in 2026
+
+### 4. Interactive Mindful Lab & Thompson Sampling
+- **The Mindful Garden**: Visual blooming plant with 5 growth stages (*Seedling*, *Zen Fern*, *Lotus*, *Bamboo*, *Ancient Bonsai*). Interactive watering and weed pruning controls.
+- **Thompson Sampling Playground**: Real-time multi-armed bandit algorithm optimizing interventions (*Breather*, *Anchor Question*, *Soft Banner*, *AI Negotiation*) with live preview testing and 20-trial Monte Carlo simulation.
+
+### 5. Multi-Tiered Milestones & Streaks
+- **7-Day Streak Calendar**: Visual tracking with active daily badges.
+- **Tiered Milestones**: 3-Day Foundation (🥉), 7-Day Consistency (🥈), 14-Day Mastery (🥇), and 30-Day Digital Sovereign (💎) with progress bars and unlocked garden species.
+
+### 6. Strict Mode (Device Administrator)
 Prevents compulsive uninstallation or force-quitting through `EnakDeviceAdminReceiver` during active focus sessions.
 
-### 4. Background Persistence
+### 7. Background Persistence
 Exempt from aggressive Android Doze battery optimizations via `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, with auto-resumption following reboot via `BootReceiver`.
 
 ---

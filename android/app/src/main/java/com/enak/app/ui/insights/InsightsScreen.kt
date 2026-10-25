@@ -4,8 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -148,28 +152,285 @@ fun InsightsScreen() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Focus Streaks & Milestones
+        // Focus Streaks & Milestones Section
+        Text(
+            text = "Conscious Streaks & Milestones",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = TextSecondary
+        )
+        Text(
+            text = "Consistent intentional sessions unlock garden species & coach personas",
+            fontSize = 11.sp,
+            color = TextMuted,
+            modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
+        )
+
+        // 1. Streak Tracker Card
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "🔥 5-Day Streak",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = vibe.accent
+                        )
+                    }
+                    Text(
+                        text = "Personal Best: 14 Days • 86% Alignment",
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(vibe.primary.copy(alpha = 0.2f))
+                        .border(1.dp, vibe.accent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Active Today",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SuccessGreen
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 7 Days Circles
+            val weekDays = listOf("M" to true, "T" to true, "W" to true, "T" to true, "F" to true, "S" to true, "S" to false)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                weekDays.forEachIndexed { idx, (day, done) ->
+                    val isToday = idx == 5
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when {
+                                        done -> vibe.primary
+                                        isToday -> vibe.accent.copy(alpha = 0.3f)
+                                        else -> DarkSurface
+                                    }
+                                )
+                                .border(
+                                    1.5.dp,
+                                    when {
+                                        isToday -> vibe.accent
+                                        done -> vibe.primary
+                                        else -> GlassBorder
+                                    },
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (done) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Check,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = day,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = day,
+                            fontSize = 10.sp,
+                            color = if (done || isToday) vibe.accent else TextMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 2. Multi-tier Milestones Cards
+        data class MilestoneItem(
+            val title: String,
+            val description: String,
+            val current: Int,
+            val target: Int,
+            val reward: String,
+            val isUnlocked: Boolean
+        )
+
+        val milestones = listOf(
+            MilestoneItem(
+                title = "🥉 3-Day Foundation",
+                description = "Build the core intentional habit without compulsive drifting",
+                current = 3,
+                target = 3,
+                reward = "Sprout Plant & +10 Garden Vitality",
+                isUnlocked = true
+            ),
+            MilestoneItem(
+                title = "🥈 7-Day Consistency",
+                description = "Complete one week of conscious screen time sessions",
+                current = 5,
+                target = 7,
+                reward = "Unlocks Zen Bamboo species in Lab",
+                isUnlocked = false
+            ),
+            MilestoneItem(
+                title = "🥇 14-Day Deep Mastery",
+                description = "Maintain quiet hours & intent boundaries for 2 weeks",
+                current = 5,
+                target = 14,
+                reward = "Unlocks Monk AI Coach voice & persona",
+                isUnlocked = false
+            ),
+            MilestoneItem(
+                title = "💎 30-Day Digital Sovereign",
+                description = "A month of complete liberation from mindless feeds",
+                current = 5,
+                target = 30,
+                reward = "Unlocks Golden Bonsai & Sovereign Theme",
+                isUnlocked = false
+            )
+        )
+
+        milestones.forEach { item ->
+            val progress = (item.current.toFloat() / item.target.toFloat()).coerceIn(0f, 1f)
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                borderColor = if (item.isUnlocked) SuccessGreen.copy(alpha = 0.5f) else GlassBorder
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = item.title,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = item.description,
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+
+                        if (item.isUnlocked) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(SuccessGreen.copy(alpha = 0.2f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Completed",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SuccessGreen
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "${item.current}/${item.target} days",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = vibe.accent
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Progress bar
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(DarkSurface)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(if (item.isUnlocked) SuccessGreen else vibe.primary)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.CardGiftcard,
+                            contentDescription = null,
+                            tint = vibe.accent,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Reward: ${item.reward}",
+                            fontSize = 11.sp,
+                            color = TextMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 3. Lifetime Mindful Metrics
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Milestones & Streaks",
-                fontSize = 15.sp,
+                text = "Lifetime Impact",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Text(text = "🔥 5-Day Mindful Streak", fontSize = 13.sp, color = vibe.accent)
-                Text(text = "Target: 7 Days", fontSize = 12.sp, color = TextMuted)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "42", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = vibe.primary)
+                    Text(text = "Sessions", fontSize = 11.sp, color = TextMuted)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "14h 20m", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = vibe.accent)
+                    Text(text = "Time Saved", fontSize = 11.sp, color = TextMuted)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "28", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                    Text(text = "Loops Broken", fontSize = 11.sp, color = TextMuted)
+                }
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Next reward unlocks a new rare plant for your Mindful Garden in the Lab.",
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

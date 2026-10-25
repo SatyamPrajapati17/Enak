@@ -6,8 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -30,10 +32,21 @@ import kotlinx.coroutines.delay
 @Composable
 fun SessionScreen(
     viewModel: MainViewModel,
+    onNavigateToIntent: () -> Unit = {},
     onFinish: () -> Unit
 ) {
     val session by viewModel.liveSession.collectAsState()
     val vibe = LocalVibe.current
+
+    if (!session.isActive) {
+        NoActiveSessionContent(
+            onStartNewSession = onNavigateToIntent,
+            onQuickStart = { purpose, mins, goal ->
+                viewModel.startSession(purpose, mins, goal)
+            }
+        )
+        return
+    }
 
     var showNegotiationDialog by remember { mutableStateOf(false) }
     var negotiationReason by remember { mutableStateOf("") }
@@ -352,5 +365,187 @@ fun BreathingExerciseView(onDismiss: () -> Unit) {
                 Text("Return to Session", color = TextPrimary)
             }
         }
+    }
+}
+
+@Composable
+fun NoActiveSessionContent(
+    onStartNewSession: () -> Unit,
+    onQuickStart: (purpose: String, mins: Int, goal: String) -> Unit
+) {
+    val vibe = LocalVibe.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(JetBlack)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Header status
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(DarkSurface)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = "○ Idle",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextMuted
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(vibe.primary.copy(alpha = 0.2f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = "Mindful Shield Ready",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = vibe.accent
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Center card with peaceful mindful visual
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(CircleShape)
+                .background(vibe.primary.copy(alpha = 0.15f))
+                .border(2.dp, vibe.accent.copy(alpha = 0.6f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Spa,
+                contentDescription = null,
+                tint = vibe.accent,
+                modifier = Modifier.size(52.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "No Active Session",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Define an intentional focus block before opening distracting apps. We'll hold the boundary so you can focus deeply.",
+            fontSize = 13.sp,
+            color = TextSecondary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        PrimaryGradientButton(
+            text = "Start New Session",
+            onClick = onStartNewSession
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Quick Launch Intention Presets
+        Text(
+            text = "Quick Launch Intentions",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = TextSecondary,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        val presets = listOf(
+            Triple("15m • Learn & Study", "Learn", 15),
+            Triple("30m • Deep Focus Block", "Work", 30),
+            Triple("45m • Coding / Project", "Work", 45),
+            Triple("5m • Mindful Breathing Reset", "Relax", 5)
+        )
+
+        presets.forEach { (label, purpose, mins) ->
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clickable {
+                        onQuickStart(purpose, mins, label)
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.PlayArrow,
+                            contentDescription = null,
+                            tint = vibe.accent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = label,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
+                    }
+                    Text(
+                        text = "Start",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = vibe.accent
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Today's stats mini card
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Completed", fontSize = 11.sp, color = TextMuted)
+                    Text(text = "3 sessions", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "On Purpose", fontSize = 11.sp, color = TextMuted)
+                    Text(text = "48 min", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = vibe.accent)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Calm Resets", fontSize = 11.sp, color = TextMuted)
+                    Text(text = "2 taken", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

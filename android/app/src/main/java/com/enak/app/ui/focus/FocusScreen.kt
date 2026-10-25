@@ -71,6 +71,59 @@ fun FocusScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Distraction Blocker Master Switch Card
+        GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            borderColor = if (settings.focusModeActive) vibe.accent else GlassBorder
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Distraction Blocker",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (settings.focusModeActive) SuccessGreen.copy(alpha = 0.2f) else DarkSurface)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = if (settings.focusModeActive) "ACTIVE" else "OFF",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (settings.focusModeActive) SuccessGreen else TextMuted
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Intercepts distracting apps (Instagram, YouTube, X, Reddit, etc.) with mindful overlay until turned off.",
+                        fontSize = 12.sp,
+                        color = TextMuted,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+                Switch(
+                    checked = settings.focusModeActive,
+                    onCheckedChange = { viewModel.toggleFocusMode(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = vibe.accent
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         // Strict Mode Card
         GlassCard(
             modifier = Modifier.fillMaxWidth(),

@@ -266,7 +266,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun waterGarden() {
+        _gardenLevel.update { (it + 1).coerceAtMost(10) }
+    }
+
+    fun pruneGarden() {
+        _gardenLevel.update { it.coerceAtLeast(1) }
+    }
+
+    fun refreshApps() {
+        loadInstalledApps()
+    }
+
     fun updateAppLimit(packageName: String, newLimitMinutes: Int) {
+        com.enak.tracking.DistractionBlocker.setDailyLimit(packageName, newLimitMinutes)
         _installedApps.update { list ->
             list.map { if (it.packageName == packageName) it.copy(dailyLimitMinutes = newLimitMinutes) else it }
         }
@@ -277,19 +290,30 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val pm = context.packageManager
             val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            val hasPerm = com.enak.app.util.PermissionUtils.hasUsageStatsPermission(context)
+            val realUsageMap = if (hasPerm) {
+                com.enak.tracking.UsageTracker(context).queryTodayUsage()
+            } else {
+                emptyMap()
+            }
+
             val filtered = packages.filter {
                 (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 ||
                 it.packageName.contains("chrome") ||
                 it.packageName.contains("youtube")
             }.map { appInfo ->
                 val label = pm.getApplicationLabel(appInfo).toString()
-                val used = when {
-                    label.contains("Instagram", ignoreCase = true) -> 42
-                    label.contains("YouTube", ignoreCase = true) -> 35
-                    label.contains("Chrome", ignoreCase = true) -> 28
-                    label.contains("WhatsApp", ignoreCase = true) -> 20
-                    label.contains("X", ignoreCase = true) || label.contains("Twitter", ignoreCase = true) -> 38
-                    else -> (10..40).random()
+                val used = if (hasPerm && realUsageMap.containsKey(appInfo.packageName)) {
+                    (realUsageMap[appInfo.packageName]!! / 60_000L).toInt()
+                } else {
+                    when {
+                        label.contains("Instagram", ignoreCase = true) -> 42
+                        label.contains("YouTube", ignoreCase = true) -> 35
+                        label.contains("Chrome", ignoreCase = true) -> 28
+                        label.contains("WhatsApp", ignoreCase = true) -> 20
+                        label.contains("X", ignoreCase = true) || label.contains("Twitter", ignoreCase = true) -> 38
+                        else -> (10..40).random()
+                    }
                 }
                 InstalledAppItem(
                     packageName = appInfo.packageName,
