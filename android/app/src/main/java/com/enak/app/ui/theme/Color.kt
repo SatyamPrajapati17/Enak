@@ -1,5 +1,6 @@
 package com.enak.app.ui.theme
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 val JetBlack = Color(0xFF0B0B10)
@@ -19,7 +20,49 @@ val TextMuted = Color(0xFF71717A)
 val SuccessGreen = Color(0xFF10B981)
 val WarningAmber = Color(0xFFF59E0B)
 
-// Vibes
+data class EnakColors(
+    val isDark: Boolean,
+    val background: Color,
+    val surface: Color,
+    val cardSurface: Color,
+    val border: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color
+)
+
+val DarkEnakColors = EnakColors(
+    isDark = true,
+    background = Color(0xFF0B0B10),
+    surface = Color(0xFF13131D),
+    cardSurface = Color(0xFF1B1B26),
+    border = Color(0x26FFFFFF),
+    textPrimary = Color(0xFFF3F4F6),
+    textSecondary = Color(0xFFA1A1AA),
+    textMuted = Color(0xFF71717A)
+)
+
+val LightEnakColors = EnakColors(
+    isDark = false,
+    background = Color(0xFFF6F8FC),
+    surface = Color(0xFFFFFFFF),
+    cardSurface = Color(0xFFECEFF5),
+    border = Color(0x1F000000),
+    textPrimary = Color(0xFF0F172A),
+    textSecondary = Color(0xFF475569),
+    textMuted = Color(0xFF94A3B8)
+)
+
+val LocalEnakColors = staticCompositionLocalOf { DarkEnakColors }
+
+data class VibePalette(
+    val name: String,
+    val id: String,
+    val primary: Color,
+    val accent: Color,
+    val gradient: List<Color>
+)
+
 val VibeRoyal = VibePalette(
     name = "Royal Amethyst",
     id = "royal",
@@ -52,13 +95,7 @@ val VibeSunset = VibePalette(
     gradient = listOf(Color(0xFFF43F5E), Color(0xFFF59E0B))
 )
 
-data class VibePalette(
-    val name: String,
-    val id: String,
-    val primary: Color,
-    val accent: Color,
-    val gradient: List<Color>
-)
+val LocalVibe = staticCompositionLocalOf { VibeRoyal }
 
 fun getVibePalette(id: String): VibePalette = when (id) {
     "cyan" -> VibeCyan

@@ -424,13 +424,17 @@ fun PermissionCard(
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = GlassBorder,
+    borderColor: Color? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val enakColors = LocalEnakColors.current
+    val effectiveBorder = borderColor ?: enakColors.border
+    val effectiveBg = enakColors.surface.copy(alpha = if (enakColors.isDark) 0.85f else 0.95f)
+
     Card(
         modifier = modifier
-            .border(1.dp, borderColor, RoundedCornerShape(24.dp)),
-        colors = CardDefaults.cardColors(containerColor = DarkSurface.copy(alpha = 0.85f)),
+            .border(1.dp, effectiveBorder, RoundedCornerShape(24.dp)),
+        colors = CardDefaults.cardColors(containerColor = effectiveBg),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(

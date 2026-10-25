@@ -64,7 +64,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val settings by viewModel.userSettings.collectAsState()
-            EnakTheme(vibeId = settings.vibe) {
+            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val isDarkTheme = when (settings.themeMode) {
+                "light" -> false
+                "dark" -> true
+                else -> systemDark
+            }
+            EnakTheme(vibeId = settings.vibe, isDarkTheme = isDarkTheme) {
                 EnakAppRoot(
                     viewModel = viewModel,
                     isOnboarded = settings.isOnboarded
@@ -112,7 +118,7 @@ fun EnakAppRoot(
                 )
             }
         },
-        containerColor = JetBlack
+        containerColor = LocalEnakColors.current.background
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -210,6 +216,7 @@ fun EnakPillBottomBar(
     onNavigate: (Screen) -> Unit
 ) {
     val vibe = LocalVibe.current
+    val colors = LocalEnakColors.current
 
     Box(
         modifier = Modifier
@@ -220,8 +227,8 @@ fun EnakPillBottomBar(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(32.dp))
-                .background(CardSurface.copy(alpha = 0.95f))
-                .border(1.dp, GlassBorder, RoundedCornerShape(32.dp))
+                .background(colors.cardSurface.copy(alpha = if (colors.isDark) 0.95f else 0.98f))
+                .border(1.dp, colors.border, RoundedCornerShape(32.dp))
                 .padding(horizontal = 6.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -248,7 +255,7 @@ fun EnakPillBottomBar(
                     Icon(
                         imageVector = screen.icon,
                         contentDescription = screen.title,
-                        tint = if (selected) Color.White else TextSecondary,
+                        tint = if (selected) Color.White else colors.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                     if (selected) {

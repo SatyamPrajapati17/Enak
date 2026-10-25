@@ -144,6 +144,24 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch {
+            prefsRepo.setThemeMode(mode)
+        }
+    }
+
+    fun resetAllData(onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            sessionTimer?.cancel()
+            _liveSession.value = LiveSessionState(isActive = false)
+            _gardenLevel.value = 1
+            prefsRepo.clearAll()
+            com.enak.tracking.DistractionBlocker.isFocusModeActive = false
+            loadInstalledApps()
+            onComplete()
+        }
+    }
+
     fun setPersonality(personality: String) {
         viewModelScope.launch {
             prefsRepo.setPersonality(personality)

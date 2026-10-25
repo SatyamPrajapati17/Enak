@@ -23,7 +23,8 @@ data class UserSettings(
     val isOnboarded: Boolean = false,
     val vibe: String = "royal", // royal, cyan, emerald, sunset
     val focusModeActive: Boolean = false,
-    val strictModeEnabled: Boolean = false
+    val strictModeEnabled: Boolean = false,
+    val themeMode: String = "dark" // "dark", "light", "system"
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -40,6 +41,7 @@ class UserPreferencesRepository(private val context: Context) {
         val VIBE = stringPreferencesKey("vibe")
         val FOCUS_MODE = booleanPreferencesKey("focus_mode")
         val STRICT_MODE = booleanPreferencesKey("strict_mode")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -55,7 +57,8 @@ class UserPreferencesRepository(private val context: Context) {
             isOnboarded = prefs[Keys.IS_ONBOARDED] ?: false,
             vibe = prefs[Keys.VIBE] ?: "royal",
             focusModeActive = prefs[Keys.FOCUS_MODE] ?: false,
-            strictModeEnabled = prefs[Keys.STRICT_MODE] ?: false
+            strictModeEnabled = prefs[Keys.STRICT_MODE] ?: false,
+            themeMode = prefs[Keys.THEME_MODE] ?: "dark"
         )
     }
 
@@ -80,6 +83,10 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setVibe(vibe: String) {
         context.dataStore.edit { it[Keys.VIBE] = vibe }
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        context.dataStore.edit { it[Keys.THEME_MODE] = mode }
     }
 
     suspend fun setFocusMode(active: Boolean) {

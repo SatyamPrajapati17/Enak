@@ -66,6 +66,21 @@ Because Enak uses deep device-level features (**Usage Access**, **Accessibility 
    - Install `enak-release.apk` from your phone's File Manager.
    - Re-enable Play Protect scanning.
 
+### Android 13, 14 & 15 "Restricted Setting" Fix (Accessibility & Notifications)
+
+On Android 13+, Google automatically disables Accessibility Services and Notification Access for sideloaded APKs, showing a popup:
+> *"Restricted setting: For your security, this setting is currently unavailable."*
+
+**How to unlock in 3 quick steps:**
+1. Open your phone's **Settings** $\rightarrow$ **Apps** $\rightarrow$ **All Apps** $\rightarrow$ Tap **Enak** (or tap *"App Info"* directly from Enak's Permissions Center).
+2. Tap the **three vertical dots (⋮)** in the top-right corner.
+3. Tap **"Allow restricted settings"** $\rightarrow$ Authenticate with your phone's PIN/Fingerprint.
+4. Return to **Enak** $\rightarrow$ Tap **Accessibility** or **Notification Access**; the toggle will now be fully interactive!
+
+### Fresh Installs & Data Isolation
+- **No Old Stale Data**: Cloud backup is disabled (`android:allowBackup="false"`). Each re-installation starts completely fresh from scratch with no ghost sessions or stale permissions from previous installs.
+- **One-Tap Reset**: A dedicated **"Start From Scratch (Reset All Data)"** button in **Settings** allows wiping all Room database records and DataStore preferences anytime.
+
 ---
 
 ## Architecture Overview
@@ -101,7 +116,8 @@ enak/
   - Headline: `20sp semibold`
   - Stat counters: `32–42sp bold`
   - Body: `14–15sp regular`
-- **Dynamic Vibe Switcher**: Pick your vibe at any time from the Today dashboard or Settings screen to dynamically shift color schemes, gradients, and glowing accents.
+- **Theme Modes**: Choose between **Dark Theme**, **Light Theme** (Clean porcelain `#F7F8FC` with crisp dark typography), or **System Default** directly in Settings.
+- **Dynamic Vibe Switcher**: Pick your vibe at any time from the Today dashboard or Settings screen to dynamically shift color schemes, gradients, and glowing accents across both Dark and Light modes.
 
 ---
 
