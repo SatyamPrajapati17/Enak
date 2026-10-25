@@ -317,3 +317,47 @@ fun OverlayBreathingExercise(onClose: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun BlockerScreen(
+    packageName: String,
+    warningNumber: Int = 1,
+    isHardBlock: Boolean = false,
+    onCloseApp: () -> Unit = {},
+    onDismissWarning: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0B0B10))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        val warningBadge = if (isHardBlock) "Hard Daily Limit Reached" else "Mindful Warning $warningNumber of 2"
+        val headline = if (isHardBlock) "Time to step away." else "Is this what you came for?"
+
+        Text(text = warningBadge, color = Color(0xFF22E3F0), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(text = headline, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = onCloseApp,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2)),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Text("Close App & Step Away", color = Color.White)
+        }
+
+        if (!isHardBlock) {
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onDismissWarning,
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Text("Continue Mindfully", color = Color(0xFF22E3F0))
+            }
+        }
+    }
+}
