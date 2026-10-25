@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -42,6 +43,7 @@ class UserPreferencesRepository(private val context: Context) {
         val FOCUS_MODE = booleanPreferencesKey("focus_mode")
         val STRICT_MODE = booleanPreferencesKey("strict_mode")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val BLOCKED_APPS = stringSetPreferencesKey("blocked_apps")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -111,6 +113,28 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setGentleMode(enabled: Boolean) {
         context.dataStore.edit { it[Keys.GENTLE_MODE] = enabled }
+    }
+
+    val blockedAppsFlow: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        prefs[Keys.BLOCKED_APPS] ?: emptySet()
+    }
+
+    suspend fun setAppBlocked(packageName: String, blocked: Boolean) {
+        context.dataStore.edit { prefs ->
+            val current = (prefs[Keys.BLOCKED_APPS] ?: emptySet()).toMutableSet()
+            if (blocked) {
+                current.add(packageName)
+            } else {
+                current.remove(packageName)
+            }
+            prefs[Keys.BLOCKED_APPS] = current
+        }
+    }
+
+    suspend fun setBlockedApps(packages: Set<String>) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.BLOCKED_APPS] = packages
+        }
     }
 
     suspend fun clearAll() {

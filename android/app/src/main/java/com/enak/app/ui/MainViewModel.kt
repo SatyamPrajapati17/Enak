@@ -29,7 +29,8 @@ data class InstalledAppItem(
     val appName: String,
     val usedMinutes: Int,
     val dailyLimitMinutes: Int = 30,
-    val isDistracting: Boolean = true
+    val isDistracting: Boolean = true,
+    val isBlocked: Boolean = false
 )
 
 data class LiveSessionState(
@@ -84,10 +85,21 @@ class MainViewModel @Inject constructor(
     private var sessionTimer: CountDownTimer? = null
 
     init {
+        com.enak.tracking.DistractionBlocker.init(application)
         loadInstalledApps()
         viewModelScope.launch {
             userSettings.collect { settings ->
-                com.enak.tracking.DistractionBlocker.isFocusModeActive = settings.focusModeActive
+                com.enak.tracking.DistractionBlocker.setFocusModeActive(application, settings.focusModeActive)
+            }
+        }
+        viewModelScope.launch {
+            prefsRepo.blockedAppsFlow.collect { blockedSet ->
+                com.enak.tracking.DistractionBlocker.setAllBlockedApps(application, blockedSet)
+                _installedApps.update { list ->
+                    list.map { app ->
+                        app.copy(isBlocked = blockedSet.contains(app.packageName))
+                    }
+                }
             }
         }
     }
@@ -303,6 +315,54 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun toggleAppBlocked(packageName: String, shouldBlock: Boolean) {
+        val context = getApplication<Application>()
+        com.enak.tracking.DistractionBlocker.setAppBlocked(context, packageName, shouldBlock)
+        viewModelScope.launch {
+            prefsRepo.setAppBlocked(packageName, shouldBlock)
+        }
+        _installedApps.update { list ->
+            list.map { app ->
+                if (app.packageName == packageName) app.copy(isBlocked = shouldBlock) else app
+            }
+        }
+        if (shouldBlock) {
+            com.enak.tracking.EnakForegroundService.start(context)
+            com.enak.tracking.DistractionBlocker.launchBlockerIfActive(context, packageName)
+        }
+    }
+
+    fun blockSuggestedDistractions() {
+        val context = getApplication<Application>()
+        val current = _installedApps.value
+        val toBlock = current
+            .filter { it.isDistracting || com.enak.tracking.DistractionBlocker.isDistraction(it.packageName) }
+            .map { it.packageName }
+            .toSet() + com.enak.tracking.DistractionBlocker.defaultDistractingPackages
+
+        com.enak.tracking.DistractionBlocker.setAllBlockedApps(context, toBlock)
+        viewModelScope.launch {
+            prefsRepo.setBlockedApps(toBlock)
+        }
+        _installedApps.update { list ->
+            list.map { app ->
+                if (toBlock.contains(app.packageName)) app.copy(isBlocked = true) else app
+            }
+        }
+        com.enak.tracking.EnakForegroundService.start(context)
+    }
+
+    fun unblockAllApps() {
+        val context = getApplication<Application>()
+        com.enak.tracking.DistractionBlocker.setAllBlockedApps(context, emptySet())
+        viewModelScope.launch {
+            prefsRepo.setBlockedApps(emptySet())
+        }
+        _installedApps.update { list ->
+            list.map { app -> app.copy(isBlocked = false) }
+        }
+    }
+
     private fun loadInstalledApps() {
         val context = getApplication<Application>()
         viewModelScope.launch {
@@ -314,6 +374,7 @@ class MainViewModel @Inject constructor(
             } else {
                 emptyMap()
             }
+            val blockedSet = com.enak.tracking.DistractionBlocker.getBlockedApps()
 
             val filtered = packages.filter {
                 (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 ||
@@ -333,11 +394,16 @@ class MainViewModel @Inject constructor(
                         else -> (10..40).random()
                     }
                 }
+                val isDistracting = com.enak.tracking.DistractionBlocker.isDistraction(appInfo.packageName)
+                val isBlocked = blockedSet.contains(appInfo.packageName) ||
+                        com.enak.tracking.DistractionBlocker.isAppBlocked(appInfo.packageName)
                 InstalledAppItem(
                     packageName = appInfo.packageName,
                     appName = label,
                     usedMinutes = used,
-                    dailyLimitMinutes = 30
+                    dailyLimitMinutes = 30,
+                    isDistracting = isDistracting,
+                    isBlocked = isBlocked
                 )
             }.sortedByDescending { it.usedMinutes }
 
@@ -345,13 +411,18 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun getDemoApps() = listOf(
-        InstalledAppItem("com.instagram.android", "Instagram", 48, 30),
-        InstalledAppItem("com.google.android.youtube", "YouTube", 36, 45),
-        InstalledAppItem("com.twitter.android", "X (Twitter)", 29, 20),
-        InstalledAppItem("com.reddit.frontpage", "Reddit", 22, 15),
-        InstalledAppItem("com.android.chrome", "Chrome", 18, 30)
-    )
+    private fun getDemoApps(): List<InstalledAppItem> {
+        val isBlockedFn: (String) -> Boolean = { pkg ->
+            com.enak.tracking.DistractionBlocker.isAppBlocked(pkg)
+        }
+        return listOf(
+            InstalledAppItem("com.instagram.android", "Instagram", 48, 30, isDistracting = true, isBlocked = isBlockedFn("com.instagram.android")),
+            InstalledAppItem("com.google.android.youtube", "YouTube", 36, 45, isDistracting = true, isBlocked = isBlockedFn("com.google.android.youtube")),
+            InstalledAppItem("com.twitter.android", "X (Twitter)", 29, 20, isDistracting = true, isBlocked = isBlockedFn("com.twitter.android")),
+            InstalledAppItem("com.reddit.frontpage", "Reddit", 22, 15, isDistracting = true, isBlocked = isBlockedFn("com.reddit.frontpage")),
+            InstalledAppItem("com.android.chrome", "Chrome", 18, 30, isDistracting = false, isBlocked = isBlockedFn("com.android.chrome"))
+        )
+    }
 
     override fun onCleared() {
         super.onCleared()

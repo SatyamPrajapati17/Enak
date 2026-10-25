@@ -32,7 +32,12 @@ class BlockerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val pkgName = intent.getStringExtra("PACKAGE_NAME") ?: "Distracting App"
-        val blockReason = intent.getStringExtra("BLOCK_REASON") ?: "Focus Mode Active"
+        val isFromBlockList = intent.getBooleanExtra("IS_FROM_BLOCK_LIST", false) || DistractionBlocker.isAppBlocked(pkgName)
+        val blockReason = if (isFromBlockList) {
+            "🔒 Locked by Enak App Block List"
+        } else {
+            intent.getStringExtra("BLOCK_REASON") ?: "Focus Mode Active"
+        }
 
         // Get friendly app name from PackageManager
         val friendlyName = try {
@@ -47,6 +52,7 @@ class BlockerActivity : ComponentActivity() {
                 appName = friendlyName,
                 packageName = pkgName,
                 blockReason = blockReason,
+                isFromBlockList = isFromBlockList,
                 onExitApp = {
                     // Send user to Android Home screen
                     val startMain = Intent(Intent.ACTION_MAIN).apply {
@@ -66,6 +72,7 @@ class BlockerActivity : ComponentActivity() {
                     try {
                         val enakIntent = Intent(this, Class.forName("com.enak.app.MainActivity")).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra("NAVIGATE_TO", "focus")
                         }
                         startActivity(enakIntent)
                     } catch (e: Exception) {
@@ -94,6 +101,7 @@ fun BlockerOverlayScreen(
     appName: String,
     packageName: String,
     blockReason: String,
+    isFromBlockList: Boolean = false,
     onExitApp: () -> Unit,
     onPutTimer: (minutes: Int) -> Unit,
     onBackToEnak: () -> Unit
@@ -175,7 +183,11 @@ fun BlockerOverlayScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Enak is holding this boundary so you stay on purpose. Long screen time is fine; mindless feeds are not.",
+                text = if (isFromBlockList) {
+                    "This app is in your Enak App Block List. It is locked and will NOT open until you unblock it in the Enak app."
+                } else {
+                    "Enak is holding this boundary so you stay on purpose. Long screen time is fine; mindless feeds are not."
+                },
                 color = Color(0xFFA1A1AA),
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -183,7 +195,7 @@ fun BlockerOverlayScreen(
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Option 1: Exit that app (Go Home)
             Button(
@@ -201,36 +213,52 @@ fun BlockerOverlayScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Option 2: Put timer for a while (+5 Min Snooze)
-            Button(
-                onClick = { onPutTimer(5) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B1B26)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
-            ) {
-                Icon(imageVector = Icons.Outlined.HourglassEmpty, contentDescription = null, tint = Color(0xFF22E3F0))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Put Timer for a While (+5m)", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            if (!isFromBlockList) {
+                // Option 2: Put timer for a while (+5 Min Snooze) - only for gentle limits
+                Button(
+                    onClick = { onPutTimer(5) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B1B26)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
+                ) {
+                    Icon(imageVector = Icons.Outlined.HourglassEmpty, contentDescription = null, tint = Color(0xFF22E3F0))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Put Timer for a While (+5m)", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Option 3: Back to Enak
+            // Option 3: Back to Enak / Open Enak to Unblock
             Button(
                 onClick = onBackToEnak,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B1B26)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isFromBlockList) Color(0xFF1B1B26) else Color(0xFF1B1B26)
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (isFromBlockList) Color(0xFF22E3F0) else Color(0x33FFFFFF)
+                )
             ) {
-                Icon(imageVector = Icons.Outlined.Home, contentDescription = null, tint = Color(0xFF10B981))
+                Icon(
+                    imageVector = if (isFromBlockList) Icons.Outlined.LockOpen else Icons.Outlined.Home,
+                    contentDescription = null,
+                    tint = if (isFromBlockList) Color(0xFF22E3F0) else Color(0xFF10B981)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Back to Enak", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    text = if (isFromBlockList) "Open Enak to Unblock" else "Back to Enak",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

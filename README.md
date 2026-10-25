@@ -123,15 +123,18 @@ enak/
 
 ## Native Android Capabilities
 
-### 1. Distraction Blocker & Focus Shield
-When **Distraction Blocker** is active (or when an app exceeds its daily boundary):
-- Enak intercepts the target package name via `EnakAccessibilityService` and `EnakForegroundService`.
-- Displays the live `BlockerActivity` overlay with the 3 direct actions:
-  - 🏠 **"Exit [App] (Go Home)"**: Closes the distracting app immediately and returns to Android home.
-  - ⏱️ **"Put Timer for a While (+5m)"**: Temporarily snoozes the blocker for 5 intentional minutes before re-engaging.
-  - ⚡ **"Back to Enak"**: Navigates straight back to the Enak dashboard to start a focused session.
-  - 🧘 **"Take a 60s Breather"**: Smooth circular box breathing exercise to reset dopamine cravings.
-- Distracting apps remain shielded continuously until toggled off from Enak's Digital Wellbeing tab.
+### 1. App Block List & Distraction Blocker
+- **Hard App Block List**: Any app added to the **App Block List** will **NOT open under any circumstances** until you manually unblock it from the Enak app:
+  - Intercepted instantaneously via `EnakAccessibilityService` and `EnakForegroundService`.
+  - Temporary snoozing is strictly disabled for hard-blocked apps—the app cannot be bypassed or accessed until unblocked in Enak.
+  - Interception overlay presents direct actions:
+    - 🏠 **"Exit [App] (Go Home)"**: Closes the blocked app immediately and redirects to Android Home.
+    - 🔓 **"Open Enak to Unblock"**: Direct deep link to Enak's App Block List screen to manage or unblock.
+    - 🧘 **"Take a 60s Breather"**: Circular box breathing exercise to reset compulsive cravings.
+  - Back-press in the blocker safely redirects to Android Home, preventing back-navigation into the blocked app.
+  - Block list is persisted locally in Jetpack DataStore and SharedPreferences across reboots (`BootReceiver`).
+- **Master Focus Shield**: When toggled active, automatically intercepts all known distracting apps (Instagram, YouTube, TikTok, X/Twitter, Reddit, Facebook, Snapchat, etc.).
+- **Per-App Daily Boundaries**: Set customizable daily screen time allowances (15m, 30m, 45m, 60m). Once exceeded, Enak intercepts the app with mindful intervention.
 
 ### 2. Real Usage Access Tracking
 Uses Android's `UsageStatsManager.queryAndAggregateUsageStats()` to calculate actual foreground minutes spent per application today. Enak displays real screen time instead of mock values and never inspects personal user content.

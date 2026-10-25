@@ -62,6 +62,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.enak.tracking.DistractionBlocker.init(this)
+        val navigateTo = intent?.getStringExtra("NAVIGATE_TO")
         setContent {
             val settings by viewModel.userSettings.collectAsState()
             val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -73,7 +75,8 @@ class MainActivity : ComponentActivity() {
             EnakTheme(vibeId = settings.vibe, isDarkTheme = isDarkTheme) {
                 EnakAppRoot(
                     viewModel = viewModel,
-                    isOnboarded = settings.isOnboarded
+                    isOnboarded = settings.isOnboarded,
+                    initialRoute = navigateTo
                 )
             }
         }
@@ -83,11 +86,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun EnakAppRoot(
     viewModel: MainViewModel,
-    isOnboarded: Boolean
+    isOnboarded: Boolean,
+    initialRoute: String? = null
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(initialRoute) {
+        if (!initialRoute.isNullOrEmpty() && isOnboarded) {
+            navController.navigate(initialRoute) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     val bottomNavItems = listOf(
         Screen.Today,

@@ -19,6 +19,7 @@ class EnakForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        DistractionBlocker.init(this)
         usageTracker = UsageTracker(this)
         createNotificationChannel()
     }
