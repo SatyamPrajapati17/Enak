@@ -1,0 +1,6 @@
+{
+  "name": "Enak - Mindful Digital Wellbeing & Intentional Screen Time",
+  "description": "Native Android & Interactive Mindful Screen Time companion: graduated interventions, real app usage tracking, AI coach negotiation, and focus limits.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
