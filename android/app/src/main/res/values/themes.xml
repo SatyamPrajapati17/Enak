@@ -1,0 +1,12 @@
+<resources>
+    <style name="Theme.Enak" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/jet_black</item>
+        <item name="android:navigationBarColor">@color/jet_black</item>
+        <item name="android:windowBackground">@color/jet_black</item>
+    </style>
+
+    <style name="Theme.Enak.Fullscreen" parent="Theme.Enak">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
