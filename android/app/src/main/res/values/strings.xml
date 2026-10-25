@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Enak</string>
+    <string name="accessibility_service_description">Enak uses this permission strictly to observe foreground application package names and trigger your configured mindful timers. Enak never reads keystrokes, personal messages, or screen content.</string>
+    <string name="device_admin_description">Enak Strict Mode: Prevents accidental uninstallation or force-stopping during your active focus sessions.</string>
+</resources>
